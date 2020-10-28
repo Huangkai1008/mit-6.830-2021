@@ -31,8 +31,8 @@ public class Catalog {
         private final String pkeyField; // The name of the primary key field.
 
         private Table(DbFile dbFile, String name, String pkField) {
-            this.name = name;
             this.dbFile = dbFile;
+            this.name = name;
             this.pkeyField = pkField;
         }
     }
