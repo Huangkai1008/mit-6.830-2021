@@ -96,7 +96,15 @@ public class SeqScan implements OpIterator {
      * prefixed with the tableAlias string from the constructor.
      */
     public TupleDesc getTupleDesc() {
-        return Database.getCatalog().getTupleDesc(tableId);
+        // add table alias name to tuple description
+        TupleDesc td = Database.getCatalog().getTupleDesc(tableId);
+        ArrayList<TupleDesc.TDItem> items = new ArrayList<>();
+        Iterator<TupleDesc.TDItem> iterator = td.iterator();
+        while (iterator.hasNext()) {
+            TupleDesc.TDItem item = iterator.next();
+            items.add(new TupleDesc.TDItem(item.fieldType, tableAlias + "." + item.fieldName));
+        }
+        return new TupleDesc(items.toArray(new TupleDesc.TDItem[0]));
     }
 
     public boolean hasNext() throws TransactionAbortedException, DbException {
