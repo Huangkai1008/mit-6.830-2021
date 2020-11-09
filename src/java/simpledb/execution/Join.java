@@ -13,9 +13,9 @@ import java.util.*;
 public class Join extends Operator {
 
     private static final long serialVersionUID = 1L;
-
     private final JoinPredicate p;
     private OpIterator[] children;
+    private Tuple t1;
 
     /**
      * Constructor. Accepts two children to join and the predicate to join them
@@ -98,23 +98,25 @@ public class Join extends Operator {
      * @see JoinPredicate#filter
      */
     protected Tuple fetchNext() throws TransactionAbortedException, DbException {
-//        child1().rewind();
-        while (child1().hasNext()) {
-            Tuple left = child1().next();
-            child2().rewind();
+        while (child1().hasNext() || this.t1 != null) {
+            if (child1().hasNext() && this.t1 == null) {
+                t1 = child1().next();
+            }
             while (child2().hasNext()) {
-                Tuple right = child2().next();
-                if (p.filter(left, right)) {
+                Tuple t2 = child2().next();
+                if (p.filter(t1, t2)) {
                     Tuple t = new Tuple(getTupleDesc());
-                    for (int i = 0; i < left.getTupleDesc().numFields(); i++) {
-                        t.setField(i, left.getField(i));
+                    for (int i = 0; i < t1.getTupleDesc().numFields(); i++) {
+                        t.setField(i, t1.getField(i));
                     }
-                    for (int i = 0; i < right.getTupleDesc().numFields(); i++) {
-                        t.setField(left.getTupleDesc().numFields() + i, right.getField(i));
+                    for (int i = 0; i < t2.getTupleDesc().numFields(); i++) {
+                        t.setField(t1.getTupleDesc().numFields() + i, t2.getField(i));
                     }
                     return t;
                 }
             }
+            child2().rewind();
+            t1 = null;
         }
         return null;
     }
